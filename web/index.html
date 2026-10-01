@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f4ef" />
+    <meta name="description" content="A consensus-backed clarity check for public startup landing pages." />
+    <title>LaunchSignal — make your offer clear</title>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="wordmark" href="#top" aria-label="LaunchSignal home"><span class="brand-mark">L<span>↗</span></span> LaunchSignal</a>
+        <nav><a href="#how">How it works</a><a href="#read">Review lookup</a><a class="nav-pill" href="https://docs.genlayer.com/developers/networks" target="_blank" rel="noreferrer">GenLayer networks ↗</a></nav>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow"><span class="eyebrow-dot"></span> A FOUNDER TOOL ON GENLAYER</div>
+            <h1>Make your offer<br /><em>easy to get.</em></h1>
+            <p class="hero-lede">A small, consensus-backed check of whether your public launch page explains what you do, who it is for, and what a visitor can do next.</p>
+            <div class="hero-proof"><span class="proof-icon">✳</span><span>Independent validators<br /><strong>one shared rubric</strong></span><span class="proof-divider"></span><span class="proof-icon proof-icon-dark">↗</span><span>Public result<br /><strong>easy to share</strong></span></div>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="signal-card"><div class="signal-card-top"><span>PAGE SIGNAL</span><span class="live-dot"></span></div><div class="signal-line signal-line-long"></div><div class="signal-line signal-line-short"></div><div class="signal-checks"><i>✓</i><i>✓</i><i>↗</i><i>✓</i></div><div class="signal-label">READY TO READ</div></div>
+            <div class="art-star star-a">✳</div><div class="art-star star-b">✦</div><div class="art-note">Say what you<br />make. Clearly.</div>
+          </div>
+        </section>
+
+        <section class="workspace" aria-labelledby="review-heading">
+          <div class="workspace-intro">
+            <div class="eyebrow">01 / RUN A REVIEW</div>
+            <h2 id="review-heading">Give your page<br />a clarity check.</h2>
+            <p>Use a public page and a one-sentence public description of your offer. The contract stores both on-chain if the transaction succeeds.</p>
+            <div class="privacy-note"><span>!</span><p><strong>Public forever.</strong> Don't enter unpublished copy, private plans, personal data, or anything you wouldn't put on your public website.</p></div>
+          </div>
+          <div class="review-card">
+            <div class="card-head"><div><span class="eyebrow">LAUNCHSIGNAL / MVP 0.1</span><h3>New page review</h3></div><span class="testnet-badge"><i></i> TEST NETWORK</span></div>
+            <form id="review-form" novalidate>
+              <label for="page-url">Public landing page <span>required</span></label>
+              <div class="input-wrap url-input"><span aria-hidden="true">↗</span><input id="page-url" type="url" maxlength="2048" placeholder="https://your-startup.com" autocomplete="url" required /></div>
+              <label for="offer">What do you offer? <span>one public sentence · max 280</span></label>
+              <textarea id="offer" maxlength="280" rows="3" placeholder="We help independent coffee shops track stock without spreadsheets." required></textarea>
+              <div class="field-meta"><span>Keep it public and specific.</span><span id="offer-count">0 / 280</span></div>
+              <div class="network-wallet-row">
+                <div><label for="network">GenLayer network</label><select id="network"><option value="studionet">Studionet · test</option><option value="testnetBradbury">Bradbury · test</option><option value="testnetAsimov">Asimov · test</option></select></div>
+                <button class="wallet-button" id="connect-wallet" type="button">Connect wallet <span>↗</span></button>
+              </div>
+              <div class="wallet-meta"><span id="wallet-status">Wallet not connected</span><span id="network-status">Read-only lookup available</span></div>
+              <label class="contract-label" for="contract-address">Deployed LaunchSignal contract</label>
+              <div class="input-wrap contract-input"><input id="contract-address" type="text" spellcheck="false" autocomplete="off" placeholder="0x…" aria-describedby="contract-hint" /></div>
+              <p class="field-hint" id="contract-hint">Paste the address from GenLayer Studio once the contract has been deployed.</p>
+              <label class="disclosure-check"><input id="public-consent" type="checkbox" /><span>I understand the page URL and offer sentence become public on-chain data, and this review is copy feedback only.</span></label>
+              <button id="estimate-button" class="primary-button" type="submit" disabled><span>Estimate fee &amp; prepare</span><b>↗</b></button>
+              <div id="fee-panel" class="fee-panel" hidden>
+                <div class="fee-panel-top"><span class="fee-kicker">ESTIMATED TEST-NET FEE</span><strong id="fee-value">—</strong></div>
+                <p>This simulates the review before submission. The wallet will show the final transaction details. Nothing has been sent yet.</p>
+                <button id="submit-review" class="confirm-button" type="button">Submit review in wallet <span>↗</span></button>
+              </div>
+            </form>
+            <div id="activity" class="activity" role="status" aria-live="polite">Connect a wallet and enter the deployed contract to prepare a review.</div>
+          </div>
+        </section>
+
+        <section class="result-section" id="read">
+          <div class="result-heading"><div><div class="eyebrow">02 / READ A RESULT</div><h2>See what validators agreed on.</h2></div><p>Review lookups are public and don't need a wallet.</p></div>
+          <div class="result-board">
+            <div class="lookup-controls">
+              <label for="review-id">Review ID</label>
+              <div class="lookup-row"><input id="review-id" inputmode="numeric" type="text" placeholder="e.g. 0" /><button id="lookup-button" type="button">Load review <span>↗</span></button></div>
+              <button id="latest-button" class="subtle-button" type="button">Load latest review</button>
+              <div class="contract-summary"><span>REVIEWS STORED</span><strong id="review-count">—</strong></div>
+              <p class="read-only-hint">Read-only · no transaction submitted</p>
+            </div>
+            <article id="result-card" class="result-card empty-result">
+              <div class="result-card-top"><span><i class="live-dot"></i> VALIDATOR CONSENSUS</span><span id="review-label">NO RESULT LOADED</span></div>
+              <div id="result-empty" class="result-empty"><span class="empty-symbol">✳</span><h3>Your page signal will show here.</h3><p>Paste a deployed contract address and load a review ID.</p></div>
+              <div id="result-content" hidden>
+                <div class="status-line"><span id="review-status" class="status-pill">—</span><span id="review-number" class="review-number"></span></div>
+                <p id="review-offer" class="result-offer"></p>
+                <a id="review-url" class="page-link" href="#" target="_blank" rel="noreferrer"></a>
+                <div class="rubric-grid">
+                  <div class="rubric-item"><span class="rubric-mark" data-flag="offer_visible">—</span><span>Offer is visible</span></div>
+                  <div class="rubric-item"><span class="rubric-mark" data-flag="audience_clear">—</span><span>Audience is clear</span></div>
+                  <div class="rubric-item"><span class="rubric-mark" data-flag="cta_clear">—</span><span>Next step is clear</span></div>
+                  <div class="rubric-item"><span class="rubric-mark" data-flag="offer_matches">—</span><span>Page matches the offer</span></div>
+                </div>
+                <div class="leader-note"><span>LEADER NOTE · OUTSIDE CONSENSUS</span><p id="review-note"></p></div>
+                <a id="share-link" class="share-link" href="#">Share this review ↗</a>
+              </div>
+            </article>
+          </div>
+          <p class="result-caveat"><strong>Consensus is not proof.</strong> The page can change or contain misleading text. A READY result only means validators agreed on this limited copy rubric; it does not predict customer demand or sales.</p>
+        </section>
+
+        <section class="how-section" id="how">
+          <div class="eyebrow">03 / THE SMALL PRINT</div><h2>A narrow check, with an open trail.</h2>
+          <div class="steps-grid">
+            <article><span>01</span><h3>Fetch public evidence</h3><p>The contract checks the URL and reads a bounded excerpt from the page you submit.</p></article>
+            <article><span>02</span><h3>Review independently</h3><p>The leader and validators each assess four concrete signals against your offer sentence.</p></article>
+            <article><span>03</span><h3>Record agreement</h3><p>Only matching rubric fields produce a stored review. The result and inputs are public.</p></article>
+          </div>
+        </section>
+      </main>
+      <footer><a class="wordmark" href="#top"><span class="brand-mark">L<span>↗</span></span> LaunchSignal</a><span>Founder tool · Research prototype · <a href="https://github.com/genlayerlabs" target="_blank" rel="noreferrer">Built on GenLayer ↗</a></span></footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
