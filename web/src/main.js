@@ -1,11 +1,11 @@
-import { createClient, isSuccessful } from 'genlayer-js';
+import { createClient } from 'genlayer-js';
 import { studionet, testnetBradbury, testnetAsimov } from 'genlayer-js/chains';
 import './style.css';
 
 const networks = {
-  studionet: { label: 'Studionet', chain: studionet, sdkName: 'studionet', explorer: 'https://explorer-studio.genlayer.com' },
-  testnetBradbury: { label: 'Bradbury testnet', chain: testnetBradbury, sdkName: 'testnetBradbury', explorer: 'https://explorer-bradbury.genlayer.com' },
-  testnetAsimov: { label: 'Asimov testnet', chain: testnetAsimov, sdkName: 'testnetAsimov', explorer: 'https://explorer-asimov.genlayer.com' },
+  studionet: { label: 'Studionet', chain: studionet, explorer: 'https://explorer-studio.genlayer.com' },
+  testnetBradbury: { label: 'Bradbury testnet', chain: testnetBradbury, explorer: 'https://explorer-bradbury.genlayer.com' },
+  testnetAsimov: { label: 'Asimov testnet', chain: testnetAsimov, explorer: 'https://explorer-asimov.genlayer.com' },
 };
 const addressPattern = /^0x[a-fA-F0-9]{40}$/;
 const maxUint = (1n << 256n) - 1n;
@@ -108,11 +108,11 @@ async function trackPendingTransaction() {
   const tracker = readClient();
   setActivity(`Checking ${checked.hash} for finalization…`);
   try {
-    const receipt = await tracker.waitForFinalization({ hash: checked.hash });
+    const receipt = await tracker.waitForTransactionReceipt({ hash: checked.hash, status: 'ACCEPTED' });
     if (pendingTx?.hash !== checked.hash) return;
     localStorage.removeItem('launchsignal.pending');
     pendingTx = undefined;
-    if (isSuccessful(receipt)) {
+    if (receipt.txExecutionResultName === 'FINISHED_WITH_RETURN') {
       setActivity('The previous review finalized successfully. Loading the latest stored review…');
       const count = BigInt(String(await tracker.readContract({ address: checked.address, functionName: 'get_review_count', args: [] })));
       if (count > 0n) await loadReview(count - 1n);
@@ -195,14 +195,6 @@ async function connectWallet() {
     el('#connect-wallet').disabled = false;
     updatePrepareState();
   }
-}
-
-function formatWei(value) {
-  const wei = BigInt(value);
-  const unit = 10n ** 18n;
-  const whole = wei / unit;
-  const fraction = (wei % unit).toString().padStart(18, '0').slice(0, 6).replace(/0+$/, '');
-  return fraction ? `${whole}.${fraction} GEN` : `${whole} GEN`;
 }
 
 function parseId(value) {
@@ -332,13 +324,13 @@ async function prepareReview(event) {
   const write = { address, functionName: 'review_page', args: [pageUrl, offer] };
   el('#estimate-button').disabled = true;
   el('#fee-panel').hidden = true;
-  setActivity('Simulating the review to estimate its test-network fee. No transaction is being submitted…');
+  setActivity('Running a preflight simulation. No transaction is being submitted…');
   try {
-    const estimate = await client.estimateTransactionFeesForWrite(write);
-    preparedReview = { write, distribution: estimate.distribution, feeValue: BigInt(estimate.feeValue), networkKey, address, pageUrl, offer };
-    el('#fee-value').textContent = formatWei(estimate.feeValue);
+    await client.simulateWriteContract(write);
+    preparedReview = { write, networkKey, address, pageUrl, offer };
+    el('#fee-value').textContent = 'Passed';
     el('#fee-panel').hidden = false;
-    setActivity('Fee estimate ready. Review the amount, then choose “Submit review in wallet” to continue.');
+    setActivity('Preflight simulation passed. Check the network and any fee shown in your wallet before submitting.');
   } catch (error) {
     preparedReview = undefined;
     setActivity(error instanceof Error ? error.message : 'Could not estimate this review fee.', true);
@@ -356,17 +348,14 @@ async function submitReview() {
     el('#fee-panel').hidden = true;
     return setActivity('The network or contract changed. Prepare a fresh estimate before submitting.', true);
   }
-  if (!window.confirm(`Submit this page review on ${networks[networkKey].label}?\n\nEstimated protocol fee: ${formatWei(current.feeValue)}\n\nThe page URL and offer sentence will be public on-chain data.`)) return;
+  if (!window.confirm(`Submit this page review on ${networks[networkKey].label}?\n\nThe page URL and offer sentence will be public on-chain data. Check any fee shown in your wallet before approving.`)) return;
 
   el('#submit-review').disabled = true;
   el('#estimate-button').disabled = true;
   setActivity('Waiting for wallet approval. Verify the test network and fee in your wallet…');
   let txHash;
   try {
-    txHash = await client.writeContract({
-      ...current.write,
-      fees: { distribution: current.distribution, feeValue: current.feeValue },
-    });
+    txHash = await client.writeContract(current.write);
   } catch (error) {
     el('#submit-review').disabled = false;
     updatePrepareState();
@@ -381,8 +370,8 @@ async function submitReview() {
   updatePrepareState();
   setActivity(`Transaction submitted: ${txHash}. Waiting for finalization. Do not submit the same review again. Explorer: ${txUrl}`);
   try {
-    const receipt = await client.waitForFinalization({ hash: txHash });
-    if (!isSuccessful(receipt)) {
+    const receipt = await client.waitForTransactionReceipt({ hash: txHash, status: 'ACCEPTED' });
+    if (receipt.txExecutionResultName !== 'FINISHED_WITH_RETURN') {
       throw new Error(`Transaction did not succeed: ${receipt.statusName} / ${receipt.txExecutionResultName}. Inspect ${txUrl}`);
     }
     localStorage.removeItem('launchsignal.pending');
