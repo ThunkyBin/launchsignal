@@ -128,7 +128,7 @@ async function trackPendingTransaction() {
 }
 
 function walletProvider() {
-  return window.phantom?.ethereum || window.okxwallet || window.ethereum || null;
+  return window.okxwallet || window.phantom?.ethereum || window.ethereum || null;
 }
 
 async function connectProviderToNetwork(selectedProvider, chain) {
