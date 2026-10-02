@@ -131,6 +131,40 @@ function walletProvider() {
   return window.phantom?.ethereum || window.okxwallet || window.ethereum || null;
 }
 
+async function connectProviderToNetwork(selectedProvider, chain) {
+  const chainId = `0x${chain.id.toString(16)}`;
+  const currentChainId = await selectedProvider.request({ method: 'eth_chainId' });
+  if (String(currentChainId).toLowerCase() === chainId.toLowerCase()) return;
+
+  try {
+    await selectedProvider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId }],
+    });
+  } catch (error) {
+    if (Number(error?.code) !== 4902) throw error;
+    const chainParams = {
+      chainId,
+      chainName: chain.name,
+      rpcUrls: chain.rpcUrls.default.http,
+      nativeCurrency: chain.nativeCurrency,
+      ...(chain.blockExplorers?.default.url
+        ? { blockExplorerUrls: [chain.blockExplorers.default.url] }
+        : {}),
+    };
+    await selectedProvider.request({ method: 'wallet_addEthereumChain', params: [chainParams] });
+    await selectedProvider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId }],
+    });
+  }
+
+  const confirmedChainId = await selectedProvider.request({ method: 'eth_chainId' });
+  if (String(confirmedChainId).toLowerCase() !== chainId.toLowerCase()) {
+    throw new Error(`The wallet stayed on chain ${confirmedChainId}; switch it to ${chain.name} and reconnect.`);
+  }
+}
+
 async function connectWallet() {
   provider = walletProvider();
   if (!provider?.request) {
@@ -144,7 +178,7 @@ async function connectWallet() {
     if (!Array.isArray(accounts) || !accounts[0]) throw new Error('The wallet did not return an account.');
     account = accounts[0];
     client = createClient({ chain: networks[networkKey].chain, account, provider });
-    await client.connect(networks[networkKey].sdkName);
+    await connectProviderToNetwork(provider, networks[networkKey].chain);
     el('#wallet-status').textContent = `${account.slice(0, 6)}…${account.slice(-4)} · connected`;
     el('#network-status').textContent = networks[networkKey].label;
     el('#connect-wallet').innerHTML = 'Wallet connected <span>✓</span>';
@@ -153,7 +187,10 @@ async function connectWallet() {
     account = '';
     client = undefined;
     el('#wallet-status').textContent = 'Wallet not connected';
-    setActivity(error instanceof Error ? error.message : 'The wallet connection did not complete.', true);
+    const message = error instanceof Error
+      ? error.message
+      : (typeof error?.message === 'string' ? error.message : 'The wallet connection did not complete.');
+    setActivity(message, true);
   } finally {
     el('#connect-wallet').disabled = false;
     updatePrepareState();
